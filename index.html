@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CalcHub — Every Calculator You Need</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=JetBrains+Mono:wght@400;500;700&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f4ef;--white:#ffffff;--surface:#f0ece4;--border:#ddd8ce;--border2:#c8c2b4;
+  --text:#1a1814;--muted:#8a8070;--accent:#e8530a;--accent2:#0066ff;--accent3:#00b87a;
+  --warn:#f5a623;--danger:#e53935;
+  --font-head:'Crimson Pro',serif;--font-mono:'JetBrains Mono',monospace;--font-body:'DM Sans',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;display:flex;flex-direction:column;}
+
+/* HEADER */
+.site-header{background:var(--text);color:var(--bg);padding:0 2rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+.site-logo{font-family:var(--font-head);font-size:1.6rem;font-weight:700;letter-spacing:-0.02em;}
+.site-logo span{color:var(--accent);}
+.site-count{font-family:var(--font-mono);font-size:0.65rem;color:rgba(247,244,239,0.5);letter-spacing:0.15em;}
+
+/* LAYOUT */
+.app{display:flex;flex:1;height:calc(100vh - 56px);}
+
+/* SIDEBAR */
+.sidebar{width:280px;background:var(--white);border-right:2px solid var(--border);overflow-y:auto;flex-shrink:0;}
+.search-wrap{padding:1rem;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--white);z-index:10;}
+.search-box{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--font-body);font-size:0.82rem;padding:8px 12px;border-radius:6px;outline:none;}
+.search-box:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(232,83,10,0.08);}
+.cat-section{padding:0.5rem 0;}
+.cat-title{font-family:var(--font-mono);font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);padding:8px 1rem 5px;display:flex;align-items:center;gap:6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 1rem;cursor:pointer;transition:all 0.15s;font-size:0.85rem;color:var(--text);border-left:3px solid transparent;}
+.nav-item:hover{background:var(--surface);color:var(--accent);}
+.nav-item.active{background:rgba(232,83,10,0.07);border-left-color:var(--accent);color:var(--accent);font-weight:600;}
+.nav-item .ni{font-size:1rem;width:20px;text-align:center;}
+
+/* MAIN PANEL */
+.main{flex:1;overflow-y:auto;padding:2.5rem 2rem;}
+.calc-panel{display:none;max-width:700px;animation:slideIn 0.25s ease;}
+.calc-panel.active{display:block;}
+@keyframes slideIn{from{opacity:0;transform:translateX(15px);}to{opacity:1;transform:translateX(0);}}
+.calc-title{font-family:var(--font-head);font-size:2.6rem;font-weight:700;line-height:1;margin-bottom:0.2rem;letter-spacing:-0.02em;}
+.calc-title .acc{color:var(--accent);}
+.calc-desc{font-size:0.82rem;color:var(--muted);margin-bottom:2rem;line-height:1.5;}
+
+/* CARDS */
+.c-card{background:var(--white);border:2px solid var(--border);border-radius:12px;padding:1.4rem;margin-bottom:1.2rem;}
+.c-label{font-family:var(--font-mono);font-size:0.6rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:0.9rem;}
+
+/* FORMS */
+.f-row{display:grid;gap:1rem;margin-bottom:1rem;}
+.f-row.c2{grid-template-columns:1fr 1fr;}
+.f-row.c3{grid-template-columns:1fr 1fr 1fr;}
+@media(max-width:580px){.f-row.c2,.f-row.c3{grid-template-columns:1fr;}}
+.f-grp{display:flex;flex-direction:column;gap:5px;}
+.f-lbl{font-size:0.68rem;font-weight:500;color:var(--muted);letter-spacing:0.05em;}
+input[type="number"],input[type="text"],input[type="date"],select,textarea{
+  width:100%;background:var(--surface);border:1.5px solid var(--border);color:var(--text);
+  font-family:var(--font-body);font-size:0.88rem;padding:10px 12px;border-radius:8px;outline:none;transition:all 0.2s;appearance:none;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);background:var(--white);box-shadow:0 0 0 3px rgba(232,83,10,0.08);}
+select{cursor:pointer;}
+
+/* BUTTONS */
+.btn{font-family:var(--font-body);font-weight:700;font-size:0.9rem;border:none;border-radius:8px;padding:11px 24px;cursor:pointer;transition:all 0.17s;display:inline-flex;align-items:center;gap:8px;}
+.btn-acc{background:var(--accent);color:#fff;}
+.btn-acc:hover{background:#c7450a;transform:translateY(-1px);box-shadow:0 6px 20px rgba(232,83,10,0.3);}
+.btn-acc:active{transform:translateY(0);}
+.btn-out{background:transparent;color:var(--text);border:1.5px solid var(--border);}
+.btn-out:hover{border-color:var(--text);}
+.btn-blue{background:var(--accent2);color:#fff;}
+.btn-blue:hover{opacity:0.88;transform:translateY(-1px);}
+.b-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:1.2rem;}
+
+/* RESULT */
+.result{background:var(--text);color:var(--bg);border-radius:12px;padding:1.5rem;margin-top:1.2rem;display:none;animation:fadeUp 0.3s ease;}
+.result.on{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.r-big{font-family:var(--font-head);font-size:3.5rem;font-weight:700;line-height:1;letter-spacing:-0.03em;}
+.r-big.acc{color:var(--accent);}
+.r-big.grn{color:#4ade80;}
+.r-big.yel{color:var(--warn);}
+.r-big.red{color:#fc6b6b;}
+.r-big.blu{color:#60a5fa;}
+.r-sub{font-size:0.72rem;font-family:var(--font-mono);letter-spacing:0.1em;text-transform:uppercase;color:rgba(247,244,239,0.5);margin-top:3px;margin-bottom:1.2rem;}
+.r-items{display:grid;gap:8px;}
+.r-item{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(255,255,255,0.06);border-radius:8px;font-size:0.82rem;}
+.r-item-label{color:rgba(247,244,239,0.6);}
+.r-item-value{font-family:var(--font-mono);font-weight:700;color:var(--bg);}
+.r-item-value.acc{color:#ffb580;}
+.r-item-value.grn{color:#4ade80;}
+.r-item-value.red{color:#fc6b6b;}
+
+/* BASIC CALCULATOR */
+.calc-screen{background:var(--text);border-radius:12px;padding:1.2rem 1.4rem;margin-bottom:1rem;}
+.calc-expr{font-family:var(--font-mono);font-size:0.82rem;color:rgba(247,244,239,0.45);min-height:1.2em;text-align:right;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.calc-display{font-family:var(--font-mono);font-size:2.8rem;font-weight:700;color:var(--bg);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.1;}
+.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.calc-btn{font-family:var(--font-mono);font-size:1rem;font-weight:700;border:none;border-radius:10px;padding:16px 8px;cursor:pointer;transition:all 0.12s;background:var(--white);color:var(--text);border:1.5px solid var(--border);}
+.calc-btn:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.12);}
+.calc-btn:active{transform:translateY(0);}
+.calc-btn.op{background:var(--surface);color:var(--accent);border-color:var(--border2);}
+.calc-btn.eq{background:var(--accent);color:#fff;border-color:var(--accent);grid-column:span 1;}
+.calc-btn.fn{background:var(--surface);color:var(--text);font-size:0.75rem;}
+.calc-btn.zero{grid-column:span 2;}
+.calc-btn.warn{background:#fff3e0;color:#e65100;border-color:#ffcc80;}
+
+/* SCIENTIFIC */
+.sci-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:8px;}
+.sci-btn{font-family:var(--font-mono);font-size:0.7rem;font-weight:600;border:none;border-radius:8px;padding:11px 4px;cursor:pointer;transition:all 0.12s;background:var(--surface);color:var(--accent2);border:1.5px solid var(--border);}
+.sci-btn:hover{background:var(--accent2);color:#fff;transform:translateY(-1px);}
+.sci-btn:active{transform:translateY(0);}
+
+/* INSIGHT ITEMS */
+.insights{display:grid;gap:8px;margin-top:1rem;}
+.ins{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;}
+.ins-ic{font-size:1rem;flex-shrink:0;margin-top:1px;}
+.ins-tx{font-size:0.8rem;line-height:1.6;color:var(--text);}
+.ins-tx strong{color:var(--accent);font-weight:700;}
+.ins-tx .g{color:var(--accent3);}
+.ins-tx .r{color:var(--danger);}
+.ins-tx .b{color:var(--accent2);}
+
+/* TABLE */
+.dtable{width:100%;border-collapse:collapse;font-size:0.8rem;}
+.dtable th{font-size:0.62rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);padding:7px 10px;border-bottom:2px solid var(--border);text-align:left;font-weight:600;}
+.dtable td{padding:7px 9px;border-bottom:1px solid var(--border);}
+.dtable td input{background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font-body);font-size:0.8rem;padding:6px 8px;border-radius:6px;width:100%;outline:none;}
+.dtable td input:focus{border-color:var(--accent);}
+.dtable .del-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1rem;transition:color 0.15s;padding:0 4px;}
+.dtable .del-btn:hover{color:var(--danger);}
+.add-btn{font-size:0.72rem;font-family:var(--font-mono);background:none;border:1.5px dashed var(--border2);color:var(--muted);padding:7px 14px;border-radius:6px;cursor:pointer;transition:all 0.15s;margin-top:8px;}
+.add-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* PROGRESS BAR */
+.pbar-wrap{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin:8px 0;}
+.pbar{height:100%;border-radius:4px;transition:width 0.8s ease;}
+
+/* HOME GRID */
+#p-home .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-top:1.5rem;}
+.home-card{background:var(--white);border:2px solid var(--border);border-radius:12px;padding:1.2rem;cursor:pointer;transition:all 0.2s;}
+.home-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 8px 24px rgba(232,83,10,0.12);}
+.home-card .hc-icon{font-size:2rem;margin-bottom:0.6rem;}
+.home-card .hc-name{font-weight:700;font-size:0.9rem;margin-bottom:2px;}
+.home-card .hc-desc{font-size:0.72rem;color:var(--muted);line-height:1.4;}
+
+/* RING SVG */
+.ring-wrap{display:flex;justify-content:center;margin-bottom:1rem;}
+
+/* TOOLTIP BADGE */
+.badge{display:inline-block;font-family:var(--font-mono);font-size:0.62rem;padding:2px 8px;border-radius:20px;font-weight:700;letter-spacing:0.08em;}
+.badge-grn{background:#d1fae5;color:#065f46;}
+.badge-red{background:#fee2e2;color:#991b1b;}
+.badge-yel{background:#fef3c7;color:#92400e;}
+.badge-blu{background:#dbeafe;color:#1e40af;}
+
+/* MOBILE */
+@media(max-width:700px){
+  .sidebar{width:240px;}
+  .main{padding:1.5rem 1rem;}
+  .calc-title{font-size:2rem;}
+  .r-big{font-size:2.5rem;}
+  .calc-display{font-size:2rem;}
+}
+@media(max-width:500px){
+  .app{flex-direction:column;height:auto;}
+  .sidebar{width:100%;height:auto;border-right:none;border-bottom:2px solid var(--border);}
+  .cat-section{display:flex;flex-wrap:wrap;gap:2px;padding:8px;}
+  .nav-item{border-left:none;border-radius:6px;border-bottom:3px solid transparent;padding:6px 10px;font-size:0.78rem;}
+  .nav-item.active{border-bottom-color:var(--accent);border-left:none;}
+  .cat-title{display:none;}
+  .search-wrap{display:none;}
+  .main{padding:1.2rem 1rem;}
+  .calc-grid{grid-template-columns:repeat(4,1fr);gap:6px;}
+  .calc-btn{padding:13px 6px;font-size:0.9rem;}
+}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="site-logo">Calc<span>Hub</span></div>
+  <div class="site-count">15 CALCULATORS // FREE</div>
+</header>
+
+<div class="app">
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="search-wrap">
+    <input class="search-box" type="text" id="search-inp" placeholder="🔍  Search calculators…" oninput="filterNav(this.value)">
+  </div>
+  <div id="nav-list">
+    <div class="cat-section">
+      <div class="cat-title">⚡ Quick Access</div>
+      <div class="nav-item active" onclick="show('home')" data-name="home all calculators" id="n-home"><span class="ni">🏠</span> Home</div>
+      <div class="nav-item" onclick="show('basic')" data-name="basic calculator standard" id="n-basic"><span class="ni">🧮</span> Basic Calculator</div>
+      <div class="nav-item" onclick="show('sci')" data-name="scientific calculator math" id="n-sci"><span class="ni">⚗️</span> Scientific Calc</div>
+    </div>
+    <div class="cat-section">
+      <div class="cat-title">🎓 Student Tools</div>
+      <div class="nav-item" onclick="show('att')" data-name="attendance bunk classes" id="n-att"><span class="ni">📊</span> Attendance</div>
+      <div class="nav-item" onclick="show('cgpa')" data-name="cgpa gpa grade points" id="n-cgpa"><span class="ni">🎓</span> CGPA / GPA</div>
+      <div class="nav-item" onclick="show('marks')" data-name="marks percentage grade" id="n-marks"><span class="ni">📝</span> Marks %</div>
+      <div class="nav-item" onclick="show('pct')" data-name="percentage calculator what percent" id="n-pct"><span class="ni">💯</span> Percentage</div>
+    </div>
+    <div class="cat-section">
+      <div class="cat-title">💰 Finance</div>
+      <div class="nav-item" onclick="show('emi')" data-name="emi loan calculator monthly" id="n-emi"><span class="ni">🏦</span> EMI / Loan</div>
+      <div class="nav-item" onclick="show('ci')" data-name="compound interest investment" id="n-ci"><span class="ni">📈</span> Compound Interest</div>
+      <div class="nav-item" onclick="show('disc')" data-name="discount sale price off" id="n-disc"><span class="ni">🏷️</span> Discount</div>
+      <div class="nav-item" onclick="show('tip')" data-name="tip split bill restaurant" id="n-tip"><span class="ni">🍽️</span> Tip / Bill Split</div>
+    </div>
+    <div class="cat-section">
+      <div class="cat-title">🏥 Health</div>
+      <div class="nav-item" onclick="show('bmi')" data-name="bmi body mass index weight height" id="n-bmi"><span class="ni">⚖️</span> BMI</div>
+      <div class="nav-item" onclick="show('cal')" data-name="calories tdee bmr diet" id="n-cal"><span class="ni">🔥</span> Calorie / TDEE</div>
+    </div>
+    <div class="cat-section">
+      <div class="cat-title">📅 Date & Time</div>
+      <div class="nav-item" onclick="show('age')" data-name="age calculator birthday" id="n-age"><span class="ni">🎂</span> Age Calculator</div>
+      <div class="nav-item" onclick="show('datediff')" data-name="date difference days between" id="n-datediff"><span class="ni">📅</span> Date Difference</div>
+    </div>
+    <div class="cat-section">
+      <div class="cat-title">🔬 Physics / Math</div>
+      <div class="nav-item" onclick="show('sdt')" data-name="speed distance time physics" id="n-sdt"><span class="ni">🚀</span> Speed / Distance</div>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- HOME -->
+<div class="calc-panel active" id="p-home">
+  <div class="calc-title">Every Calculator<br><span class="acc">You Need.</span></div>
+  <div class="calc-desc">15 calculators for students, finance, health, date & more — all free, all local.</div>
+  <div class="grid" id="home-grid">
+    <!-- filled by JS -->
+  </div>
+</div>
+
+<!-- BASIC CALCULATOR -->
+<div class="calc-panel" id="p-basic">
+  <div class="calc-title">Basic <span class="acc">Calc</span></div>
+  <div class="calc-desc">Standard calculator with keyboard support.</div>
+  <div class="c-card">
+    <div class="calc-screen">
+      <div class="calc-expr" id="bc-expr"></div>
+      <div class="calc-display" id="bc-disp">0</div>
+    </div>
+    <div class="calc-grid">
+      <button class="calc-btn warn" onclick="bcFn('AC')">AC</button>
+      <button class="calc-btn fn" onclick="bcFn('+/-')">+/−</button>
+      <button class="calc-btn fn" onclick="bcFn('%')">%</button>
+      <button class="calc-btn op" onclick="bcFn('÷')">÷</button>
+      <button class="calc-btn" onclick="bcFn('7')">7</button>
+      <button class="calc-btn" onclick="bcFn('8')">8</button>
+      <button class="calc-btn" onclick="bcFn('9')">9</button>
+      <button class="calc-btn op" onclick="bcFn('×')">×</button>
+      <button class="calc-btn" onclick="bcFn('4')">4</button>
+      <button class="calc-btn" onclick="bcFn('5')">5</button>
+      <button class="calc-btn" onclick="bcFn('6')">6</button>
+      <button class="calc-btn op" onclick="bcFn('−')">−</button>
+      <button class="calc-btn" onclick="bcFn('1')">1</button>
+      <button class="calc-btn" onclick="bcFn('2')">2</button>
+      <button class="calc-btn" onclick="bcFn('3')">3</button>
+      <button class="calc-btn op" onclick="bcFn('+')">+</button>
+      <button class="calc-btn zero" onclick="bcFn('0')">0</button>
+      <button class="calc-btn" onclick="bcFn('.')">.</button>
+      <button class="calc-btn eq" onclick="bcFn('=')">=</button>
+    </div>
+  </div>
+</div>
+
+<!-- SCIENTIFIC -->
+<div class="calc-panel" id="p-sci">
+  <div class="calc-title">Scientific <span class="acc">Calc</span></div>
+  <div class="calc-desc">Trigonometry, logarithms, powers and more.</div>
+  <div class="c-card">
+    <div class="calc-screen">
+      <div class="calc-expr" id="sc-expr"></div>
+      <div class="calc-display" id="sc-disp">0</div>
+    </div>
+    <div class="sci-grid">
+      <button class="sci-btn" onclick="sciFn('sin')">sin</button>
+      <button class="sci-btn" onclick="sciFn('cos')">cos</button>
+      <button class="sci-btn" onclick="sciFn('tan')">tan</button>
+      <button class="sci-btn" onclick="sciFn('log')">log</button>
+      <button class="sci-btn" onclick="sciFn('ln')">ln</button>
+      <button class="sci-btn" onclick="sciFn('sqrt')">√x</button>
+      <button class="sci-btn" onclick="sciFn('x2')">x²</button>
+      <button class="sci-btn" onclick="sciFn('x3')">x³</button>
+      <button class="sci-btn" onclick="sciFn('inv')">1/x</button>
+      <button class="sci-btn" onclick="sciFn('pi')">π</button>
+      <button class="sci-btn" onclick="sciFn('e')">e</button>
+      <button class="sci-btn" onclick="sciFn('abs')">|x|</button>
+      <button class="sci-btn" onclick="sciFn('(')">( </button>
+      <button class="sci-btn" onclick="sciFn(')')"> )</button>
+      <button class="sci-btn" onclick="sciFn('pow')">xʸ</button>
+    </div>
+    <div class="calc-grid">
+      <button class="calc-btn warn" onclick="scFn('AC')">AC</button>
+      <button class="calc-btn fn" onclick="scFn('+/-')">+/−</button>
+      <button class="calc-btn fn" onclick="scFn('%')">%</button>
+      <button class="calc-btn op" onclick="scFn('÷')">÷</button>
+      <button class="calc-btn" onclick="scFn('7')">7</button>
+      <button class="calc-btn" onclick="scFn('8')">8</button>
+      <button class="calc-btn" onclick="scFn('9')">9</button>
+      <button class="calc-btn op" onclick="scFn('×')">×</button>
+      <button class="calc-btn" onclick="scFn('4')">4</button>
+      <button class="calc-btn" onclick="scFn('5')">5</button>
+      <button class="calc-btn" onclick="scFn('6')">6</button>
+      <button class="calc-btn op" onclick="scFn('−')">−</button>
+      <button class="calc-btn" onclick="scFn('1')">1</button>
+      <button class="calc-btn" onclick="scFn('2')">2</button>
+      <button class="calc-btn" onclick="scFn('3')">3</button>
+      <button class="calc-btn op" onclick="scFn('+')">+</button>
+      <button class="calc-btn zero" onclick="scFn('0')">0</button>
+      <button class="calc-btn" onclick="scFn('.')">.</button>
+      <button class="calc-btn eq" onclick="scFn('=')">=</button>
+    </div>
+  </div>
+</div>
+
+<!-- ATTENDANCE -->
+<div class="calc-panel" id="p-att">
+  <div class="calc-title">Attendance <span class="acc">Calc</span></div>
+  <div class="calc-desc">Know exactly how many classes you can bunk safely — or how many you need to recover.</div>
+  <div class="c-card">
+    <div class="c-label">Your Attendance Data</div>
+    <div class="f-row c2">
+      <div class="f-grp"><label class="f-lbl">Total Classes Held</label><input type="number" id="a-total" placeholder="e.g. 120" min="0" oninput="calcAtt()"></div>
+      <div class="f-grp"><label class="f-lbl">Classes Attended</label><input type="number" id="a-att" placeholder="e.g. 95" min="0" oninput="calcAtt()"></div>
+      <div class="f-grp"><label class="f-lbl">Required % Threshold</label><input type="number" id="a-req" value="75" min="1" max="100" oninput="calcAtt()"></div>
+      <div class="f-grp"><label class="f-lbl">Upcoming Classes</label><input type="number" id="a-fut" placeholder="optional" min="0" oninput="calcAtt()"></div>
+    </div>
+  </div>
+  <div class="result" id="att-res">
+    <div style="display:flex;align-items:center;gap:2rem;flex-wrap:wrap;margin-bottom:1.4rem;">
+      <svg width="100" height="100" style="flex-shrink:0;transform:rotate(-90deg)">
+        <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8"/>
+        <circle id="att-ring" cx="50" cy="50" r="42" fill="none" stroke="#4ade80" stroke-width="8" stroke-dasharray="264" stroke-dashoffset="264" stroke-linecap="round" style="transition:all 0.8s ease;"/>
+      </svg>
+      <div>
+        <div class="r-big" id="att-pct-big">—</div>
+        <div class="r-sub" id="att-status">ENTER DATA</div>
+        <div id="att-bunk-badge" style="margin-top:8px;"></div>
+      </div>
+    </div>
+    <div class="r-items" id="att-items"></div>
+  </div>
+  <div class="insights" id="att-ins"></div>
+</div>
+
+<!-- CGPA -->
+<div class="calc-panel" id="p-cgpa">
+  <div class="calc-title">CGPA <span class="acc">Calc</span></div>
+  <div class="calc-desc">Weighted grade point average calculator for 10-point scale.</div>
+  <div class="c-card">
+    <div class="c-label">Subject-wise Grades</div>
+    <table class="dtable"><thead><tr><th>Subject</th><th>Grade Points (0–10)</th><th>Credits</th><th></th></tr></thead>
+    <tbody id="cgpa-body"></tbody></table>
+    <button class="add-btn" onclick="addSub()">+ Add Subject</button>
+  </div>
+  <div class="b-row">
+    <button class="btn btn-acc" onclick="calcCGPA()">Calculate CGPA</button>
+    <button class="btn btn-out" onclick="resetCGPA()">Reset</button>
+  </div>
+  <div class="result" id="cgpa-res">
+    <div class="r-big blu" id="cgpa-val">—</div>
+    <div class="r-sub">CGPA / 10-POINT SCALE</div>
+    <div class="r-items" id="cgpa-items"></div>
+  </div>
+</div>
+
+<!-- MARKS % -->
+<div class="calc-panel" id="p-marks">
+  <div class="calc-title">Marks <span class="acc">%</span></div>
+  <div class="calc-desc">Calculate your overall percentage and letter grade from subject marks.</div>
+  <div class="c-card">
+    <div class="c-label">Subject Marks</div>
+    <table class="dtable"><thead><tr><th>Subject</th><th>Obtained</th><th>Maximum</th><th></th></tr></thead>
+    <tbody id="marks-body"></tbody></table>
+    <button class="add-btn" onclick="addMark()">+ Add Subject</button>
+  </div>
+  <div class="b-row">
+    <button class="btn btn-acc" onclick="calcMarks()">Calculate</button>
+    <button class="btn btn-out" onclick="resetMarks()">Reset</button>
+  </div>
+  <div class="result" id="marks-res">
+    <div class="r-big" id="marks-pct-big">—</div>
+    <div class="r-sub" id="marks-grade-lbl">OVERALL PERCENTAGE</div>
+    <div class="r-items" id="marks-items"></div>
+  </div>
+</div>
+
+<!-- PERCENTAGE -->
+<div class="calc-panel" id="p-pct">
+  <div class="calc-title">Percentage <span class="acc">Calc</span></div>
+  <div class="calc-desc">Three modes — find percentage, value from %, or % change.</div>
+  <div class="c-card">
+    <div class="c-label">Mode</div>
+    <div class="f-grp" style="margin-bottom:1.2rem;">
+      <select id="pct-mode" onchange="renderPctMode()">
+        <option value="of">What is X% of Y?</option>
+        <option value="is">X is what % of Y?</option>
+        <option value="change">% Change from X to Y</option>
+        <option value="add">Add X% to Y (e.g. tax/markup)</option>
+        <option value="off">Y minus X% (e.g. discount)</option>
+      </select>
+    </div>
+    <div id="pct-inputs"></div>
+    <div class="b-row"><button class="btn btn-acc" onclick="calcPct()">Calculate</button></div>
+    <div class="result" id="pct-res">
+      <div class="r-big acc" id="pct-result">—</div>
+      <div class="r-sub" id="pct-result-lbl">RESULT</div>
+      <div class="r-items" id="pct-items"></div>
+    </div>
+  </div>
+</div>
+
+<!-- EMI -->
+<div class="calc-panel" id="p-emi">
+  <div class="calc-title">EMI / Loan <span class="acc">Calc</span></div>
+  <div class="calc-desc">Calculate monthly EMI, total interest paid, and full repayment schedule.</div>
+  <div class="c-card">
+    <div class="c-label">Loan Details</div>
+    <div class="f-row c2">
+      <div class="f-grp"><label class="f-lbl">Loan Amount (₹)</label><input type="number" id="emi-amt" placeholder="e.g. 500000" min="0"></div>
+      <div class="f-grp"><label class="f-lbl">Annual Interest Rate (%)</label><input type="number" id="emi-rate" placeholder="e.g. 8.5" step="0.1" min="0"></div>
+      <div class="f-grp"><label class="f-lbl">Tenure (Months)</label><input type="number" id="emi-months" placeholder="e.g. 60" min="1"></div>
+    </div>
+  </div>
+  <div class="b-row"><button class="btn btn-acc" onclick="calcEMI()">Calculate EMI</button></div>
+  <div class="result" id="emi-res">
+    <div class="r-big grn" id="emi-val">—</div>
+    <div class="r-sub">MONTHLY EMI</div>
+    <div class="r-items" id="emi-items"></div>
+  </div>
+</div>
+
+<!-- COMPOUND INTEREST -->
+<div class="calc-panel" id="p-ci">
+  <div class="calc-title">Compound <span class="acc">Interest</span></div>
+  <div class="calc-desc">Calculate the future value of an investment with compound interest.</div>
+  <div class="c-card">
+    <div class="f-row c2">
+      <div class="f-grp"><label class="f-lbl">Principal Amount (₹)</label><input type="number" id="ci-p" placeholder="e.g. 100000" min="0"></div>
+      <div class="f-grp"><label class="f-lbl">Annual Interest Rate (%)</label><input type="number" id="ci-r" placeholder="e.g. 12" step="0.1" min="0"></div>
+      <div class="f-grp"><label class="f-lbl">Time (Years)</label><input type="number" id="ci-t" placeholder="e.g. 5" min="0" step="0.5"></div>
+      <div class="f-grp"><label class="f-lbl">Compounding Frequency</label>
+        <select id="ci-n"><option value="1">Annually</option><option value="2">Semi-Annually</option><option value="4">Quarterly</option><option value="12" selected>Monthly</option><option value="365">Daily</option></select>
+      </div>
+    </div>
+  </div>
+  <div class="b-row"><button class="btn btn-acc" onclick="calcCI()">Calculate</button></div>
+  <div class="result" id="ci-res">
+    <div class="r-big grn" id="ci-val">—</div>
+    <div class="r-sub">TOTAL AMOUNT</div>
+    <div class="r-items" id="ci-items"></div>
+  </div>
+</div>
+
+<!-- DISCOUNT -->
+<div class="calc-panel" id="p-disc">
+  <div class="calc-title">Discount <span class="acc">Calc</span></div>
+  <div class="calc-desc">Find sale price, savings, and effective discount rate quickly.</div>
+  <div class="c-card">
+    <div class="f-row c2">
+      <div class="f-grp"><label class="f-lbl">Original Price (₹)</label><input type="number" id="disc-price" placeholder="e.g. 2000" min="0" oninput="calcDisc()"></div>
+      <div class="f-grp"><label class="f-lbl">Discount (%)</label><input type="number" id="disc-pct" placeholder="e.g. 30" min="0" max="100" oninput="calcDisc()"></div>
+    </div>
+    <div class="f-row c2">
+      <div class="f-grp"><label class="f-lbl">Extra / Second Discount (%)</label><input type="number" id="disc-pct2" placeholder="optional" min="0" max="100" oninput="calcDisc()"></div>
+    </div>
+  </div>
+  <div class="result on" id="disc-res">
+    <div class="r-big grn" id="disc-final">₹ —</div>
+    <div class="r-sub">FINAL PRICE</div>
+    <div class="r-items" id="disc-items"></div>
+  </div>
+</div>
+
+<!-- TIP -->
+<div class="calc-panel" id="p-tip">
+  <div class="calc-title">Tip / Bill <span class="acc">Split</span></div>
+  <div class="calc-desc">Calculate tip amount and split bills among friends.</div>
+  <div class="c-card">
+    <div class="f-row c2">
+      <div class="f-grp"><label class="f-lbl">Bill Amount (₹)</label><input type="number" id="tip-bill" placeholder="e.g. 1500" min="0" oninput="calcTip()"></div>
+      <div class="f-grp"><label class="f-lbl">Tip (%)</label><input type="number" id="tip-pct" value="10" min="0" max="100" oninput="calcTip()"></div>
+      <div class="f-grp"><label class="f-lbl">Number of People</label><input type="number" id="tip-ppl" value="2" min="1" oninput="calcTip()"></div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:0.5rem;">
+      <button class="btn btn-out" style="font-size:0.78rem;padding:6px 14px;" onclick="setTip(10)">10%</button>
+      <button class="btn btn-out" style="font-size:0.78rem;padding:6px 14px;" onclick="setTip(15)">15%</button>
+      <button class="btn btn-out" style="font-size:0.78rem;padding:6px 14px;" onclick="setTip(18)">18%</button>
+      <button class="btn btn-out" style="font-size:0.78rem;padding:6px 14px;" onclick="setTip(20)">20%</button>
+      <button class="btn btn-out" style="font-size:0.78rem;padding:6px 14px;" onclick="setTip(25)">25%</button>
+    </div>
+  </div>
+  <div class="result on" id="tip-res">
+    <div class="r-big acc" id="tip-per-person">₹ —</div>
+    <div class="r-sub">PER PERSON</div>
+    <div class="r-items" id="tip-items"></div>
+  </div>
+</div>
+
+<!-- BMI -->
+<div class="calc-panel" id="p-bmi">
+  <div class="calc-title">BMI <span class="acc">Calculator</span></div>
+  <div class="calc-desc">Body Mass Index — know your weight-health category instantly.</div>
+  <div class="c-card">
+    <div class="f-row c2">
+      <div class="f-grp"><label class="f-lbl">Weight</label><input type="number" id="bmi-w" placeholder="e.g. 65" min="0" step="0.1" oninput="calcBMI()"></div>
+      <div class="f-grp"><label class="f-lbl">Unit</label>
+        <select id="bmi-wu" onchange="calcBMI()"><option value="kg">Kilograms (kg)</option><option value="lb">Pounds (lb)</option></select>
+      </div>
+      <div class="f-grp"><label class="f-lbl">Height</label><input type="number" id="bmi-h" placeholder="e.g. 170" min="0" step="0.1" oninput="calcBMI()"></div>
+      <div class="f-grp"><label class="f-lbl">Unit</label>
+        <select id="bmi-hu" onchange="calcBMI()"><option value="cm">Centimeters (cm)</option><option value="m">Meters (m)</option><option value="ft">Feet (ft)</option><option value="in">Inches (in)</option></select>
+      </div>
+    </div>
+  </div>
+  <div class="result" id="bmi-res">
+    <div class="r-big" id="bmi-val">—</div>
+    <div class="r-sub" id="bmi-cat-lbl">BMI VALUE</div>
+    <div style="margin:12px 0;">
+      <div style="display:flex;justify-content:space-between;font-size:0.65rem;font-family:var(--font-mono);color:rgba(247,244,239,0.5);margin-bottom:4px;">
+        <span>Underweight</span><span>Normal</span><span>Overweight</span><span>Obese</span>
+      </div>
+      <div style="position:relative;height:8px;background:linear-gradient(to right,#60a5fa,#4ade80,#fbbf24,#f87171);border-radius:4px;">
+        <div id="bmi-marker" style="position:absolute;top:-3px;width:14px;height:14px;background:#fff;border-radius:50%;border:3px solid var(--text);transform:translateX(-50%);left:50%;transition:left 0.6s ease;"></div>
+      </div>
+    </div>
+    <div class="r-items" id="bmi-items"></div>
+  </div>
+</div>
+
+<!-- CALORIE / TDEE -->
+<div class="calc-panel" id="p-cal">
+  <div class="calc-title">Calorie / <span class="acc">TDEE</span></div>
+  <div class="calc-desc">Calculate daily calorie needs based on your body and activity level.</div>
+  <div class="c-card">
+    <div class="f-row c2">
+      <div class="f-grp"><label class="f-lbl">Age (years)</label><input type="number" id="tdee-age" placeholder="e.g. 21" min="10" max="100"></div>
+      <div class="f-grp"><label class="f-lbl">Gender</label>
+        <select id="tdee-gender"><option value="m">Male</option><option value="f">Female</option></select>
+      </div>
+      <div class="f-grp"><label class="f-lbl">Weight (kg)</label><input type="number" id="tdee-w" placeholder="e.g. 65" step="0.1" min="0"></div>
+      <div class="f-grp"><label class="f-lbl">Height (cm)</label><input type="number" id="tdee-h" placeholder="e.g. 170" step="0.5" min="0"></div>
+      <div class="f-grp" style="grid-column:span 2;">
+        <label class="f-lbl">Activity Level</label>
+        <select id="tdee-act">
+          <option value="1.2">Sedentary (little/no exercise)</option>
+          <option value="1.375">Lightly active (1–3 days/week)</option>
+          <option value="1.55" selected>Moderately active (3–5 days/week)</option>
+          <option value="1.725">Very active (6–7 days/week)</option>
+          <option value="1.9">Extra active (physical job + training)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="b-row"><button class="btn btn-acc" onclick="calcTDEE()">Calculate Calories</button></div>
+  <div class="result" id="tdee-res">
+    <div class="r-big acc" id="tdee-val">—</div>
+    <div class="r-sub">CALORIES / DAY (TDEE)</div>
+    <div class="r-items" id="tdee-items"></div>
+  </div>
+</div>
+
+<!-- AGE -->
+<div class="calc-panel" id="p-age">
+  <div class="calc-title">Age <span class="acc">Calculator</span></div>
+  <div class="calc-desc">Exact age in years, months, days — plus days alive and next birthday countdown.</div>
+  <div class="c-card">
+    <div class="f-row c2">
+      <div class="f-grp"><label class="f-lbl">Date of Birth</label><input type="text" id="age-dob" placeholder="DD/MM/YYYY" maxlength="10" oninput="fmtD(this);calcAge()"></div>
+      <div class="f-grp"><label class="f-lbl">Calculate As Of</label><input type="text" id="age-ref" placeholder="DD/MM/YYYY" maxlength="10" oninput="fmtD(this);calcAge()"></div>
+    </div>
+    <button class="btn btn-out" style="font-size:0.8rem;padding:7px 16px;" onclick="setToday()">Use Today's Date</button>
+  </div>
+  <div class="result" id="age-res">
+    <div class="r-big acc" id="age-big">—</div>
+    <div class="r-sub">AGE</div>
+    <div class="r-items" id="age-items"></div>
+  </div>
+</div>
+
+<!-- DATE DIFF -->
+<div class="calc-panel" id="p-datediff">
+  <div class="calc-title">Date <span class="acc">Difference</span></div>
+  <div class="calc-desc">Find the exact number of days, weeks, months between two dates.</div>
+  <div class="c-card">
+    <div class="f-row c2">
+      <div class="f-grp"><label class="f-lbl">Start Date</label><input type="text" id="dd-start" placeholder="DD/MM/YYYY" maxlength="10" oninput="fmtD(this);calcDateDiff()"></div>
+      <div class="f-grp"><label class="f-lbl">End Date</label><input type="text" id="dd-end" placeholder="DD/MM/YYYY" maxlength="10" oninput="fmtD(this);calcDateDiff()"></div>
+    </div>
+    <button class="btn btn-out" style="font-size:0.8rem;padding:7px 16px;" onclick="ddToday()">Set End = Today</button>
+  </div>
+  <div class="result" id="dd-res">
+    <div class="r-big acc" id="dd-big">—</div>
+    <div class="r-sub">DAYS BETWEEN</div>
+    <div class="r-items" id="dd-items"></div>
+  </div>
+</div>
+
+<!-- SPEED/DISTANCE/TIME -->
+<div class="calc-panel" id="p-sdt">
+  <div class="calc-title">Speed / Distance / <span class="acc">Time</span></div>
+  <div class="calc-desc">Solve for any one variable when the other two are known.</div>
+  <div class="c-card">
+    <div class="f-grp" style="margin-bottom:1rem;">
+      <label class="f-lbl">Solve For</label>
+      <select id="sdt-solve">
+        <option value="speed">Speed (S = D ÷ T)</option>
+        <option value="distance">Distance (D = S × T)</option>
+        <option value="time">Time (T = D ÷ S)</option>
+      </select>
+    </div>
+    <div class="f-row c2" id="sdt-inputs"><!-- filled by JS --></div>
+    <div class="f-grp">
+      <label class="f-lbl">Unit System</label>
+      <select id="sdt-unit"><option value="metric">Metric (km, km/h, hr)</option><option value="imperial">Imperial (miles, mph, hr)</option></select>
+    </div>
+  </div>
+  <div class="b-row"><button class="btn btn-acc" onclick="calcSDT()">Calculate</button></div>
+  <div class="result" id="sdt-res">
+    <div class="r-big acc" id="sdt-val">—</div>
+    <div class="r-sub" id="sdt-lbl">RESULT</div>
+    <div class="r-items" id="sdt-items"></div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<script>
+// ════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════
+const ALL_CALCS=[
+  {id:'home',icon:'🏠',name:'Home',desc:'All calculators'},
+  {id:'basic',icon:'🧮',name:'Basic Calculator',desc:'Standard arithmetic'},
+  {id:'sci',icon:'⚗️',name:'Scientific Calc',desc:'Trig, log, powers'},
+  {id:'att',icon:'📊',name:'Attendance',desc:'Bunk counter + recovery'},
+  {id:'cgpa',icon:'🎓',name:'CGPA / GPA',desc:'Weighted grade average'},
+  {id:'marks',icon:'📝',name:'Marks %',desc:'Subject-wise percentage'},
+  {id:'pct',icon:'💯',name:'Percentage',desc:'5 calculation modes'},
+  {id:'emi',icon:'🏦',name:'EMI / Loan',desc:'Monthly installment'},
+  {id:'ci',icon:'📈',name:'Compound Interest',desc:'Investment growth'},
+  {id:'disc',icon:'🏷️',name:'Discount',desc:'Sale price & savings'},
+  {id:'tip',icon:'🍽️',name:'Tip / Split',desc:'Restaurant bill splitter'},
+  {id:'bmi',icon:'⚖️',name:'BMI',desc:'Body mass index'},
+  {id:'cal',icon:'🔥',name:'Calorie / TDEE',desc:'Daily calorie needs'},
+  {id:'age',icon:'🎂',name:'Age Calculator',desc:'Exact age + birthday'},
+  {id:'datediff',icon:'📅',name:'Date Difference',desc:'Days between dates'},
+  {id:'sdt',icon:'🚀',name:'Speed / Distance',desc:'Physics helper'},
+];
+
+function show(id){
+  document.querySelectorAll('.calc-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  const panel=document.getElementById('p-'+id);
+  const nav=document.getElementById('n-'+id);
+  if(panel)panel.classList.add('active');
+  if(nav)nav.classList.add('active');
+  document.querySelector('.main').scrollTop=0;
+}
+
+function filterNav(q){
+  q=q.toLowerCase().trim();
+  document.querySelectorAll('.nav-item').forEach(el=>{
+    const name=el.dataset.name||'';
+    el.style.display=(!q||name.includes(q))?'':'none';
+  });
+}
+
+// Build home grid
+function buildHome(){
+  const g=document.getElementById('home-grid');
+  g.innerHTML=ALL_CALCS.filter(c=>c.id!=='home').map(c=>`
+    <div class="home-card" onclick="show('${c.id}')">
+      <div class="hc-icon">${c.icon}</div>
+      <div class="hc-name">${c.name}</div>
+      <div class="hc-desc">${c.desc}</div>
+    </div>
+  `).join('');
+}
+
+// ════════════════════════════════════════
+// BASIC CALCULATOR
+// ════════════════════════════════════════
+let bc={disp:'0',expr:'',op:null,prev:null,newNum:true};
+function bcFn(k){
+  if(k==='AC'){bc={disp:'0',expr:'',op:null,prev:null,newNum:true};}
+  else if(k==='='){
+    if(bc.op&&bc.prev!==null){
+      const cur=parseFloat(bc.disp);
+      const res=doOp(bc.prev,cur,bc.op);
+      bc.expr=bc.disp+'=';bc.disp=fmtNum(res);bc.op=null;bc.prev=null;bc.newNum=true;
+    }
+  }
+  else if(['+','−','×','÷'].includes(k)){
+    bc.prev=parseFloat(bc.disp);bc.op=k;bc.expr=bc.disp+' '+k;bc.newNum=true;
+  }
+  else if(k==='+/-'){bc.disp=String(-parseFloat(bc.disp));}
+  else if(k==='%'){bc.disp=String(parseFloat(bc.disp)/100);}
+  else if(k==='.'){if(bc.newNum){bc.disp='0.';bc.newNum=false;}else if(!bc.disp.includes('.'))bc.disp+='.';}
+  else{if(bc.newNum){bc.disp=k;bc.newNum=false;}else{bc.disp=bc.disp==='0'?k:bc.disp+k;}}
+  document.getElementById('bc-disp').textContent=bc.disp;
+  document.getElementById('bc-expr').textContent=bc.expr;
+}
+function doOp(a,b,op){if(op==='÷')return b===0?0:a/b;if(op==='×')return a*b;if(op==='−')return a-b;return a+b;}
+function fmtNum(n){if(isNaN(n)||!isFinite(n))return'Error';const s=parseFloat(n.toFixed(10)).toString();return s.length>12?parseFloat(n.toPrecision(8)).toString():s;}
+
+// SCIENTIFIC CALCULATOR (shares same logic)
+let sc={disp:'0',expr:'',op:null,prev:null,newNum:true,sciExpr:''};
+function scFn(k){
+  if(k==='AC'){sc={disp:'0',expr:'',op:null,prev:null,newNum:true,sciExpr:''};}
+  else if(k==='='){
+    if(sc.op&&sc.prev!==null){const cur=parseFloat(sc.disp);const res=doOp(sc.prev,cur,sc.op);sc.expr=sc.disp+'=';sc.disp=fmtNum(res);sc.op=null;sc.prev=null;sc.newNum=true;}
+  }
+  else if(['+','−','×','÷'].includes(k)){sc.prev=parseFloat(sc.disp);sc.op=k;sc.expr=sc.disp+' '+k;sc.newNum=true;}
+  else if(k==='+/-'){sc.disp=String(-parseFloat(sc.disp));}
+  else if(k==='%'){sc.disp=String(parseFloat(sc.disp)/100);}
+  else if(k==='.'){if(sc.newNum){sc.disp='0.';sc.newNum=false;}else if(!sc.disp.includes('.'))sc.disp+='.';}
+  else{if(sc.newNum){sc.disp=k;sc.newNum=false;}else{sc.disp=sc.disp==='0'?k:sc.disp+k;}}
+  document.getElementById('sc-disp').textContent=sc.disp;
+  document.getElementById('sc-expr').textContent=sc.expr;
+}
+function sciFn(fn){
+  const v=parseFloat(sc.disp);let r;
+  if(fn==='sin')r=Math.sin(v*Math.PI/180);
+  else if(fn==='cos')r=Math.cos(v*Math.PI/180);
+  else if(fn==='tan')r=Math.tan(v*Math.PI/180);
+  else if(fn==='log')r=Math.log10(v);
+  else if(fn==='ln')r=Math.log(v);
+  else if(fn==='sqrt')r=Math.sqrt(v);
+  else if(fn==='x2')r=v*v;
+  else if(fn==='x3')r=v*v*v;
+  else if(fn==='inv')r=1/v;
+  else if(fn==='abs')r=Math.abs(v);
+  else if(fn==='pi'){sc.disp=String(Math.PI);sc.newNum=true;document.getElementById('sc-disp').textContent=sc.disp;return;}
+  else if(fn==='e'){sc.disp=String(Math.E);sc.newNum=true;document.getElementById('sc-disp').textContent=sc.disp;return;}
+  else if(fn==='pow'){sc.prev=v;sc.op='×';sc.expr=v+' ^';sc.newNum=true;document.getElementById('sc-expr').textContent=sc.expr;return;}
+  else if(fn==='('||fn===')'){sc.expr+=fn;document.getElementById('sc-expr').textContent=sc.expr;return;}
+  if(r!==undefined){sc.disp=fmtNum(r);sc.expr=fn+'('+v+')=';sc.newNum=true;}
+  document.getElementById('sc-disp').textContent=sc.disp;
+  document.getElementById('sc-expr').textContent=sc.expr;
+}
+
+// Keyboard support for basic calc
+document.addEventListener('keydown',e=>{
+  const map={'0':'0','1':'1','2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9','.':'.','Enter':'=','=':'=','Backspace':'AC','+':'+','-':'−','*':'×','/':'÷','%':'%'};
+  if(map[e.key]){e.preventDefault();bcFn(map[e.key]);}
+});
+
+// ════════════════════════════════════════
+// ATTENDANCE
+// ════════════════════════════════════════
+function calcAtt(){
+  const total=parseInt(document.getElementById('a-total').value)||0;
+  const att=parseInt(document.getElementById('a-att').value)||0;
+  const req=parseFloat(document.getElementById('a-req').value)||75;
+  const future=parseInt(document.getElementById('a-fut').value)||0;
+  if(total<=0||att<0)return;
+  const pct=(att/total)*100,pctR=Math.round(pct*10)/10,nd=req/100;
+  // ring
+  const circ=264;
+  document.getElementById('att-ring').style.strokeDashoffset=circ-Math.min(pct/100,1)*circ;
+  document.getElementById('att-ring').style.stroke=pct>=req?'#4ade80':pct>=req-10?'#fbbf24':'#fc6b6b';
+  const cls=pct>=req?'grn':pct>=req-10?'yel':'red';
+  document.getElementById('att-pct-big').textContent=pctR+'%';
+  document.getElementById('att-pct-big').className='r-big '+cls;
+  document.getElementById('att-status').textContent=pct>=req?'ABOVE THRESHOLD':pct>=req-10?'BORDERLINE':'BELOW THRESHOLD';
+  const items=[];
+  let bunkBadge='';
+  if(pct>=req){
+    const canBunk=Math.floor((att-nd*total)/(1-nd));
+    items.push({l:'Can Safely Bunk',v:canBunk+' classes',c:'grn'});
+    bunkBadge=`<span class="badge badge-grn">🟢 Can bunk ${canBunk} more class${canBunk!==1?'es':''}</span>`;
+    if(canBunk===0)bunkBadge=`<span class="badge badge-red">⚠️ Don't miss even one!</span>`;
+  } else {
+    const need=Math.ceil((nd*total-att)/(1-nd));
+    items.push({l:'Must Attend to Recover',v:need+' consecutive classes',c:'red'});
+    bunkBadge=`<span class="badge badge-red">🔴 Attend ${need} more to recover</span>`;
+  }
+  items.push({l:'Current Attendance',v:pctR+'%',c:cls});
+  items.push({l:'Classes Attended',v:att+' / '+total});
+  items.push({l:'Required Threshold',v:req+'%'});
+  if(future>0){
+    const nT=total+future,ifAll=((att+future)/nT)*100,ifNone=(att/nT)*100;
+    const minAtt=Math.max(0,Math.ceil(nd*nT-att)),canSkip=Math.max(0,future-minAtt);
+    items.push({l:'If Attend All '+future,v:ifAll.toFixed(1)+'%',c:'grn'});
+    items.push({l:'If Skip All '+future,v:ifNone.toFixed(1)+'%',c:'red'});
+    items.push({l:'Can Skip (of '+future+')',v:canSkip+' classes',c:'grn'});
+  }
+  document.getElementById('att-bunk-badge').innerHTML=bunkBadge;
+  document.getElementById('att-items').innerHTML=items.map(i=>`<div class="r-item"><span class="r-item-label">${i.l}</span><span class="r-item-value ${i.c||''}">${i.v}</span></div>`).join('');
+  document.getElementById('att-res').classList.add('on');
+  const insHtml=[];
+  if(pct>=req){const cb=Math.floor((att-nd*total)/(1-nd));insHtml.push({i:'🟢',t:`You're at <strong>${pctR}%</strong> — safely above <strong>${req}%</strong>. You can bunk up to <strong class="g">${cb} more class${cb!==1?'es':''}</strong>.`});}
+  else{const n=Math.ceil((nd*total-att)/(1-nd));insHtml.push({i:'🔴',t:`You're at <strong class="r">${pctR}%</strong>. Attend <strong>${n} consecutive class${n!==1?'es':''}</strong> with zero bunks to reach ${req}%.`});}
+  document.getElementById('att-ins').innerHTML=insHtml.map(x=>`<div class="ins"><span class="ins-ic">${x.i}</span><div class="ins-tx">${x.t}</div></div>`).join('');
+}
+
+// ════════════════════════════════════════
+// CGPA
+// ════════════════════════════════════════
+let subs=[];
+function addSub(n='',g='',c=''){subs.push({n,g,c});renderSubs();}
+function renderSubs(){document.getElementById('cgpa-body').innerHTML=subs.map((s,i)=>`<tr><td><input type="text" value="${s.n}" placeholder="Subject ${i+1}" onchange="subs[${i}].n=this.value"></td><td><input type="number" value="${s.g}" placeholder="8.0" min="0" max="10" step="0.1" onchange="subs[${i}].g=this.value"></td><td><input type="number" value="${s.c}" placeholder="4" min="1" max="10" onchange="subs[${i}].c=this.value"></td><td><button class="del-btn" onclick="subs.splice(${i},1);renderSubs()">✕</button></td></tr>`).join('');}
+function calcCGPA(){
+  if(!subs.length)return;
+  let tC=0,tP=0;subs.forEach(s=>{const g=parseFloat(s.g),c=parseFloat(s.c);if(!isNaN(g)&&!isNaN(c)&&c>0){tP+=g*c;tC+=c;}});
+  if(!tC)return;
+  const cgpa=tP/tC,pct=cgpa*10,gr=cgpa>=9?'O':cgpa>=8?'A+':cgpa>=7?'A':cgpa>=6?'B+':cgpa>=5?'B':cgpa>=4?'C':'F';
+  document.getElementById('cgpa-val').textContent=cgpa.toFixed(2);
+  document.getElementById('cgpa-items').innerHTML=[
+    {l:'CGPA',v:cgpa.toFixed(2)+' / 10',c:'blu'},
+    {l:'Percentage Equiv.',v:pct.toFixed(1)+'%'},
+    {l:'Letter Grade',v:gr,c:cgpa>=7?'grn':cgpa>=5?'acc':'red'},
+    {l:'Total Credits',v:tC},
+    {l:'Status',v:cgpa>=7?'First Class':cgpa>=6?'Second Class':cgpa>=5?'Pass':'Fail',c:cgpa>=7?'grn':cgpa>=5?'acc':'red'}
+  ].map(i=>`<div class="r-item"><span class="r-item-label">${i.l}</span><span class="r-item-value ${i.c||''}">${i.v}</span></div>`).join('');
+  document.getElementById('cgpa-res').classList.add('on');
+}
+function resetCGPA(){subs=[];renderSubs();document.getElementById('cgpa-res').classList.remove('on');}
+
+// ════════════════════════════════════════
+// MARKS
+// ════════════════════════════════════════
+let marks=[];
+function addMark(n='',o='',m=''){marks.push({n,o,m});renderMarks();}
+function renderMarks(){document.getElementById('marks-body').innerHTML=marks.map((r,i)=>`<tr><td><input type="text" value="${r.n}" placeholder="Subject ${i+1}" onchange="marks[${i}].n=this.value"></td><td><input type="number" value="${r.o}" placeholder="0" min="0" onchange="marks[${i}].o=this.value"></td><td><input type="number" value="${r.m}" placeholder="100" min="1" onchange="marks[${i}].m=this.value"></td><td><button class="del-btn" onclick="marks.splice(${i},1);renderMarks()">✕</button></td></tr>`).join('');}
+function calcMarks(){
+  if(!marks.length)return;
+  let tO=0,tM=0;const det=[];
+  marks.forEach(r=>{const o=parseFloat(r.o),m=parseFloat(r.m);if(!isNaN(o)&&!isNaN(m)&&m>0){tO+=o;tM+=m;det.push({n:r.n||'Sub',p:(o/m*100).toFixed(1)});}});
+  if(!tM)return;
+  const pct=tO/tM*100,gr=pct>=90?'O':pct>=80?'A':pct>=70?'B':pct>=60?'C':pct>=50?'D':'F';
+  const cls=pct>=75?'grn':pct>=50?'yel':'red';
+  document.getElementById('marks-pct-big').textContent=pct.toFixed(1)+'%';
+  document.getElementById('marks-pct-big').className='r-big '+cls;
+  document.getElementById('marks-grade-lbl').textContent='GRADE: '+gr;
+  document.getElementById('marks-items').innerHTML=[...det.map(d=>({l:d.n,v:d.p+'%'})),{l:'Total',v:tO+' / '+tM},{l:'Percentage',v:pct.toFixed(2)+'%',c:cls},{l:'Grade',v:gr,c:cls}].map(i=>`<div class="r-item"><span class="r-item-label">${i.l}</span><span class="r-item-value ${i.c||''}">${i.v}</span></div>`).join('');
+  document.getElementById('marks-res').classList.add('on');
+}
+function resetMarks(){marks=[];renderMarks();document.getElementById('marks-res').classList.remove('on');}
+
+// ════════════════════════════════════════
+// PERCENTAGE
+// ════════════════════════════════════════
+const PCT_MODES={
+  of:[{id:'pct-x',l:'Percentage (%)',ph:'e.g. 15'},{id:'pct-y',l:'Of Value',ph:'e.g. 200'}],
+  is:[{id:'pct-x',l:'Value (X)',ph:'e.g. 30'},{id:'pct-y',l:'Of Total (Y)',ph:'e.g. 200'}],
+  change:[{id:'pct-x',l:'Original Value',ph:'e.g. 100'},{id:'pct-y',l:'New Value',ph:'e.g. 130'}],
+  add:[{id:'pct-x',l:'Base Value',ph:'e.g. 1000'},{id:'pct-y',l:'Add (%) e.g. GST',ph:'e.g. 18'}],
+  off:[{id:'pct-x',l:'Original Price',ph:'e.g. 500'},{id:'pct-y',l:'Discount (%)',ph:'e.g. 20'}],
+};
+function renderPctMode(){
+  const mode=document.getElementById('pct-mode').value;
+  const fields=PCT_MODES[mode];
+  document.getElementById('pct-inputs').innerHTML=`<div class="f-row c2">${fields.map(f=>`<div class="f-grp"><label class="f-lbl">${f.l}</label><input type="number" id="${f.id}" placeholder="${f.ph}" step="any"></div>`).join('')}</div>`;
+  document.getElementById('pct-res').classList.remove('on');
+}
+function calcPct(){
+  const mode=document.getElementById('pct-mode').value;
+  const x=parseFloat(document.getElementById('pct-x').value);
+  const y=parseFloat(document.getElementById('pct-y').value);
+  if(isNaN(x)||isNaN(y))return;
+  let res,lbl,items=[];
+  if(mode==='of'){res=x/100*y;lbl=`${x}% of ${y}`;items=[{l:'Result',v:res.toFixed(4),c:'acc'}];}
+  else if(mode==='is'){res=x/y*100;lbl=`${x} is ${res.toFixed(2)}% of ${y}`;items=[{l:'Percentage',v:res.toFixed(4)+'%',c:'acc'}];}
+  else if(mode==='change'){res=(y-x)/x*100;lbl=(res>=0?'Increase':'Decrease')+` of ${Math.abs(res).toFixed(2)}%`;items=[{l:'% Change',v:res.toFixed(2)+'%',c:res>=0?'grn':'red'},{l:'Absolute Change',v:(y-x).toFixed(2)}];}
+  else if(mode==='add'){const added=x*y/100;res=x+added;lbl=`${x} + ${y}% = ${res.toFixed(2)}`;items=[{l:'Added Amount',v:added.toFixed(2),c:'acc'},{l:'Total',v:res.toFixed(2),c:'grn'}];}
+  else{const off=x*y/100;res=x-off;lbl=`${x} − ${y}% = ${res.toFixed(2)}`;items=[{l:'Discount Amount',v:off.toFixed(2),c:'red'},{l:'Final Price',v:res.toFixed(2),c:'grn'}];}
+  document.getElementById('pct-result').textContent=typeof res==='number'?res.toFixed(2):res;
+  document.getElementById('pct-result-lbl').textContent=lbl.toUpperCase();
+  document.getElementById('pct-items').innerHTML=items.map(i=>`<div class="r-item"><span class="r-item-label">${i.l}</span><span class="r-item-value ${i.c||''}">${i.v}</span></div>`).join('');
+  document.getElementById('pct-res').classList.add('on');
+}
+
+// ════════════════════════════════════════
+// EMI
+// ════════════════════════════════════════
+function calcEMI(){
+  const P=parseFloat(document.getElementById('emi-amt').value)||0;
+  const rY=parseFloat(document.getElementById('emi-rate').value)||0;
+  const n=parseInt(document.getElementById('emi-months').value)||0;
+  if(!P||!n)return;
+  const r=rY/1200;
+  let emi;
+  if(r===0)emi=P/n;
+  else emi=P*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
+  const total=emi*n,interest=total-P;
+  document.getElementById('emi-val').textContent='₹'+emi.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  document.getElementById('emi-items').innerHTML=[
+    {l:'Monthly EMI',v:'₹'+emi.toFixed(2),c:'grn'},
+    {l:'Principal Amount',v:'₹'+P.toFixed(0)},
+    {l:'Total Interest',v:'₹'+interest.toFixed(0),c:'red'},
+    {l:'Total Repayment',v:'₹'+total.toFixed(0),c:'acc'},
+    {l:'Tenure',v:n+' months ('+(n/12).toFixed(1)+' yrs)'},
+    {l:'Interest Rate',v:rY+'% p.a.'},
+  ].map(i=>`<div class="r-item"><span class="r-item-label">${i.l}</span><span class="r-item-value ${i.c||''}">${i.v}</span></div>`).join('');
+  document.getElementById('emi-res').classList.add('on');
+}
+
+// ════════════════════════════════════════
+// COMPOUND INTEREST
+// ════════════════════════════════════════
+function calcCI(){
+  const P=parseFloat(document.getElementById('ci-p').value)||0;
+  const r=parseFloat(document.getElementById('ci-r').value)||0;
+  const t=parseFloat(document.getElementById('ci-t').value)||0;
+  const n=parseInt(document.getElementById('ci-n').value)||1;
+  if(!P||!r||!t)return;
+  const A=P*Math.pow(1+r/(100*n),n*t),CI=A-P;
+  document.getElementById('ci-val').textContent='₹'+A.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+  document.getElementById('ci-items').innerHTML=[
+    {l:'Future Value',v:'₹'+A.toFixed(2),c:'grn'},
+    {l:'Principal',v:'₹'+P.toFixed(2)},
+    {l:'Interest Earned',v:'₹'+CI.toFixed(2),c:'acc'},
+    {l:'Return on Investment',v:(CI/P*100).toFixed(2)+'%',c:'grn'},
+    {l:'Effective Annual Rate',v:(Math.pow(1+r/(100*n),n)-1)*100+'% p.a.'},
+  ].map(i=>`<div class="r-item"><span class="r-item-label">${i.l}</span><span class="r-item-value ${i.c||''}">${i.v}</span></div>`).join('');
+  document.getElementById('ci-res').classList.add('on');
+}
+
+// ════════════════════════════════════════
+// DISCOUNT
+// ════════════════════════════════════════
+function calcDisc(){
+  const p=parseFloat(document.getElementById('disc-price').value)||0;
+  const d1=parseFloat(document.getElementById('disc-pct').value)||0;
+  const d2=parseFloat(document.getElementById('disc-pct2').value)||0;
+  if(!p){document.getElementById('disc-final').textContent='₹ —';document.getElementById('disc-items').innerHTML='';return;}
+  const after1=p*(1-d1/100),after2=d2?after1*(1-d2/100):after1;
+  const saved=p-after2,eff=saved/p*100;
+  document.getElementById('disc-final').textContent='₹'+after2.toFixed(2);
+  document.getElementById('disc-items').innerHTML=[
+    {l:'Original Price',v:'₹'+p.toFixed(2)},
+    {l:'After '+d1+'% Off',v:'₹'+after1.toFixed(2)},
+    d2?{l:'After Extra '+d2+'% Off',v:'₹'+after2.toFixed(2)}:null,
+    {l:'Total Savings',v:'₹'+saved.toFixed(2),c:'grn'},
+    {l:'Effective Discount',v:eff.toFixed(1)+'%',c:'acc'},
+  ].filter(Boolean).map(i=>`<div class="r-item"><span class="r-item-label">${i.l}</span><span class="r-item-value ${i.c||''}">${i.v}</span></div>`).join('');
+}
+
+// ════════════════════════════════════════
+// TIP
+// ════════════════════════════════════════
+function setTip(v){document.getElementById('tip-pct').value=v;calcTip();}
+function calcTip(){
+  const bill=parseFloat(document.getElementById('tip-bill').value)||0;
+  const tipP=parseFloat(document.getElementById('tip-pct').value)||0;
+  const ppl=parseInt(document.getElementById('tip-ppl').value)||1;
+  const tip=bill*tipP/100,total=bill+tip,perP=total/ppl;
+  document.getElementById('tip-per-person').textContent='₹'+perP.toFixed(2);
+  document.getElementById('tip-items').innerHTML=[
+    {l:'Bill Amount',v:'₹'+bill.toFixed(2)},
+    {l:'Tip ('+tipP+'%)',v:'₹'+tip.toFixed(2),c:'acc'},
+    {l:'Total Bill',v:'₹'+total.toFixed(2)},
+    {l:'People',v:ppl},
+    {l:'Per Person',v:'₹'+perP.toFixed(2),c:'grn'},
+  ].map(i=>`<div class="r-item"><span class="r-item-label">${i.l}</span><span class="r-item-value ${i.c||''}">${i.v}</span></div>`).join('');
+}
+
+// ════════════════════════════════════════
+// BMI
+// ════════════════════════════════════════
+function calcBMI(){
+  let w=parseFloat(document.getElementById('bmi-w').value)||0;
+  let h=parseFloat(document.getElementById('bmi-h').value)||0;
+  const wu=document.getElementById('bmi-wu').value;
+  const hu=document.getElementById('bmi-hu').value;
+  if(!w||!h)return;
+  if(wu==='lb')w*=0.453592;
+  if(hu==='cm')h/=100;else if(hu==='ft')h*=0.3048;else if(hu==='in')h*=0.0254;
+  const bmi=w/(h*h);
+  const cat=bmi<18.5?'Underweight':bmi<25?'Normal':bmi<30?'Overweight':'Obese';
+  const cls=bmi<18.5?'blu':bmi<25?'grn':bmi<30?'yel':'red';
+  const pctPos=Math.min(Math.max((bmi-10)/30*100,2),98);
+  document.getElementById('bmi-val').textContent=bmi.toFixed(1);
+  document.getElementById('bmi-val').className='r-big '+cls;
+  document.getElementById('bmi-cat-lbl').textContent=cat.toUpperCase();
+  document.getElementById('bmi-marker').style.left=pctPos+'%';
+  const idealMin=(18.5*h*h).toFixed(1),idealMax=(24.9*h*h).toFixed(1);
+  document.getElementById('bmi-items').innerHTML=[
+    {l:'BMI',v:bmi.toFixed(2),c:cls},
+    {l:'Category',v:cat,c:cls},
+    {l:'Ideal Weight Range',v:idealMin+'–'+idealMax+' kg'},
+    {l:'Weight',v:w.toFixed(1)+' kg'},
+    {l:'Height',v:(h*100).toFixed(1)+' cm'},
+  ].map(i=>`<div class="r-item"><span class="r-item-label">${i.l}</span><span class="r-item-value ${i.c||''}">${i.v}</span></div>`).join('');
+  document.getElementById('bmi-res').classList.add('on');
+}
+
+// ════════════════════════════════════════
+// TDEE / CALORIE
+// ════════════════════════════════════════
+function calcTDEE(){
+  const age=parseInt(document.getElementById('tdee-age').value)||0;
+  const g=document.getElementById('tdee-gender').value;
+  const w=parseFloat(document.getElementById('tdee-w').value)||0;
+  const h=parseFloat(document.getElementById('tdee-h').value)||0;
+  const act=parseFloat(document.getElementById('tdee-act').value)||1.55;
+  if(!age||!w||!h)return;
+  let bmr=g==='m'?10*w+6.25*h-5*age+5:10*w+6.25*h-5*age-161;
+  const tdee=bmr*act;
+  document.getElementById('tdee-val').textContent=Math.round(tdee)+' kcal';
+  document.getElementById('tdee-items').innerHTML=[
+    {l:'TDEE (Maintenance)',v:Math.round(tdee)+' kcal/day',c:'acc'},
+    {l:'BMR (Base)',v:Math.round(bmr)+' kcal/day'},
+    {l:'Weight Loss (−500)',v:Math.round(tdee-500)+' kcal/day',c:'yel'},
+    {l:'Weight Gain (+500)',v:Math.round(tdee+500)+' kcal/day',c:'grn'},
+    {l:'Protein Need',v:Math.round(w*1.8)+'–'+Math.round(w*2.2)+' g/day'},
+    {l:'Water Intake',v:(w*0.033).toFixed(1)+' L/day'},
+  ].map(i=>`<div class="r-item"><span class="r-item-label">${i.l}</span><span class="r-item-value ${i.c||''}">${i.v}</span></div>`).join('');
+  document.getElementById('tdee-res').classList.add('on');
+}
+
+// ════════════════════════════════════════
+// AGE
+// ════════════════════════════════════════
+function setToday(){const t=new Date();document.getElementById('age-ref').value=`${pad(t.getDate())}/${pad(t.getMonth()+1)}/${t.getFullYear()}`;calcAge();}
+function fmtD(el){let v=el.value.replace(/\D/g,'');if(v.length>8)v=v.slice(0,8);if(v.length>4)v=v.slice(0,2)+'/'+v.slice(2,4)+'/'+v.slice(4);else if(v.length>2)v=v.slice(0,2)+'/'+v.slice(2);el.value=v;}
+function parseD(s){const p=s.split('/');if(p.length!==3||p[2].length<4)return null;const d=new Date(+p[2],+p[1]-1,+p[0]);return isNaN(d)?null:d;}
+function pad(n){return String(n).padStart(2,'0');}
+function calcAge(){
+  const dob=parseD(document.getElementById('age-dob').value);
+  const ref=parseD(document.getElementById('age-ref').value);
+  if(!dob||!ref||dob>ref)return;
+  let y=ref.getFullYear()-dob.getFullYear(),m=ref.getMonth()-dob.getMonth(),d=ref.getDate()-dob.getDate();
+  if(d<0){m--;d+=new Date(ref.getFullYear(),ref.getMonth(),0).getDate();}
+  if(m<0){y--;m+=12;}
+  const totalD=Math.floor((ref-dob)/86400000);
+  let nb=new Date(ref.getFullYear(),dob.getMonth(),dob.getDate());
+  if(nb<=ref)nb=new Date(ref.getFullYear()+1,dob.getMonth(),dob.getDate());
+  const dToB=Math.ceil((nb-ref)/86400000);
+  document.getElementById('age-big').textContent=`${y} yrs ${m} mo`;
+  document.getElementById('age-items').innerHTML=[
+    {l:'Age',v:`${y} years, ${m} months, ${d} days`,c:'acc'},
+    {l:'Total Days Lived',v:totalD.toLocaleString(),c:'grn'},
+    {l:'Total Hours',v:(totalD*24).toLocaleString()},
+    {l:'Total Weeks',v:Math.floor(totalD/7).toLocaleString()},
+    {l:'Next Birthday In',v:dToB+' days',c:'yel'},
+    {l:'Next Birthday',v:nb.toDateString()},
+  ].map(i=>`<div class="r-item"><span class="r-item-label">${i.l}</span><span class="r-item-value ${i.c||''}">${i.v}</span></div>`).join('');
+  document.getElementById('age-res').classList.add('on');
+}
+
+// ════════════════════════════════════════
+// DATE DIFF
+// ════════════════════════════════════════
+function ddToday(){const t=new Date();document.getElementById('dd-end').value=`${pad(t.getDate())}/${pad(t.getMonth()+1)}/${t.getFullYear()}`;calcDateDiff();}
+function calcDateDiff(){
+  const s=parseD(document.getElementById('dd-start').value);
+  const e=parseD(document.getElementById('dd-end').value);
+  if(!s||!e)return;
+  const diff=Math.abs(Math.floor((e-s)/86400000));
+  document.getElementById('dd-big').textContent=diff+' days';
+  document.getElementById('dd-items').innerHTML=[
+    {l:'Total Days',v:diff.toLocaleString(),c:'acc'},
+    {l:'Weeks',v:Math.floor(diff/7)+' weeks + '+diff%7+' days'},
+    {l:'Months (approx)',v:(diff/30.44).toFixed(1)},
+    {l:'Years (approx)',v:(diff/365.25).toFixed(2)},
+    {l:'Start Date',v:s.toDateString()},
+    {l:'End Date',v:e.toDateString()},
+  ].map(i=>`<div class="r-item"><span class="r-item-label">${i.l}</span><span class="r-item-value ${i.c||''}">${i.v}</span></div>`).join('');
+  document.getElementById('dd-res').classList.add('on');
+}
+
+// ════════════════════════════════════════
+// SPEED / DISTANCE / TIME
+// ════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',()=>{renderSDT();});
+function renderSDT(){
+  const solve=document.getElementById('sdt-solve')?document.getElementById('sdt-solve').value:'speed';
+  const c=document.getElementById('sdt-inputs');if(!c)return;
+  const unit=document.getElementById('sdt-unit')?document.getElementById('sdt-unit').value:'metric';
+  const spU=unit==='metric'?'km/h':'mph',dU=unit==='metric'?'km':'miles';
+  const fields={
+    speed:[{id:'sdt-d',l:'Distance ('+dU+')',ph:'100'},{id:'sdt-t',l:'Time (hours)',ph:'2'}],
+    distance:[{id:'sdt-s',l:'Speed ('+spU+')',ph:'60'},{id:'sdt-t',l:'Time (hours)',ph:'2'}],
+    time:[{id:'sdt-d',l:'Distance ('+dU+')',ph:'120'},{id:'sdt-s',l:'Speed ('+spU+')',ph:'60'}],
+  };
+  c.innerHTML=fields[solve].map(f=>`<div class="f-grp"><label class="f-lbl">${f.l}</label><input type="number" id="${f.id}" placeholder="${f.ph}" step="any" min="0"></div>`).join('');
+}
+function calcSDT(){
+  const solve=document.getElementById('sdt-solve').value;
+  const unit=document.getElementById('sdt-unit').value;
+  const spU=unit==='metric'?'km/h':'mph',dU=unit==='metric'?'km':'miles';
+  let res,lbl,items=[];
+  if(solve==='speed'){
+    const d=parseFloat(document.getElementById('sdt-d').value),t=parseFloat(document.getElementById('sdt-t').value);
+    if(!d||!t)return;res=d/t;lbl=res.toFixed(2)+' '+spU;
+    items=[{l:'Speed',v:res.toFixed(2)+' '+spU,c:'acc'},{l:'Distance',v:d+' '+dU},{l:'Time',v:t+' hours'}];
+  }else if(solve==='distance'){
+    const s=parseFloat(document.getElementById('sdt-s').value),t=parseFloat(document.getElementById('sdt-t').value);
+    if(!s||!t)return;res=s*t;lbl=res.toFixed(2)+' '+dU;
+    items=[{l:'Distance',v:res.toFixed(2)+' '+dU,c:'acc'},{l:'Speed',v:s+' '+spU},{l:'Time',v:t+' hours'}];
+  }else{
+    const d=parseFloat(document.getElementById('sdt-d').value),s=parseFloat(document.getElementById('sdt-s').value);
+    if(!d||!s)return;res=d/s;lbl=res.toFixed(2)+' hours';
+    const h=Math.floor(res),m=Math.round((res-h)*60);
+    items=[{l:'Time',v:h+'h '+m+'m',c:'acc'},{l:'Distance',v:d+' '+dU},{l:'Speed',v:s+' '+spU}];
+  }
+  document.getElementById('sdt-val').textContent=lbl;
+  document.getElementById('sdt-lbl').textContent=solve.toUpperCase();
+  document.getElementById('sdt-items').innerHTML=items.map(i=>`<div class="r-item"><span class="r-item-label">${i.l}</span><span class="r-item-value ${i.c||''}">${i.v}</span></div>`).join('');
+  document.getElementById('sdt-res').classList.add('on');
+}
+
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+window.addEventListener('DOMContentLoaded',()=>{
+  buildHome();
+  addSub();addSub();addSub();
+  addMark();addMark();addMark();
+  renderPctMode();
+  setToday();
+  ddToday();
+  calcDisc();calcTip();
+  if(document.getElementById('sdt-solve'))document.getElementById('sdt-solve').addEventListener('change',renderSDT);
+  if(document.getElementById('sdt-unit'))document.getElementById('sdt-unit').addEventListener('change',renderSDT);
+});
+</script>
+</body>
+</html>
